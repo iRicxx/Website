@@ -62,8 +62,17 @@ export function ProposalSection() {
     }
   }, [stage, messageIndex, introMessages.length])
 
-  const handleYes = () => {
+  const handleYes = async () => {
     setStage("celebration")
+    
+    // Enviar el acta de matrimonio por correo
+    try {
+      await fetch('/api/send-acta', {
+        method: 'POST',
+      })
+    } catch (error) {
+      console.error('Error enviando correo:', error)
+    }
     
     const duration = 10 * 1000
     const animationEnd = Date.now() + duration
