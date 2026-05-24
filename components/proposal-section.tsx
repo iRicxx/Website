@@ -341,7 +341,7 @@ export function ProposalSection() {
                 </div>
                 
                 <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary text-balance leading-tight">
-                  <TypewriterText text="Quieres ser mi novia?" speed={80} />
+                  <TypewriterText text="Quieres volver a intentarlo conmigo?" speed={80} />
                 </h2>
               </motion.div>
               
