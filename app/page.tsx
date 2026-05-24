@@ -1,15 +1,104 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useState, useEffect, useRef } from "react"
 import { HelloKittyImage, Heart, Bow, Star, Sparkle } from "@/components/hello-kitty"
 import { Timeline } from "@/components/timeline"
 import { ProposalSection } from "@/components/proposal-section"
+import { Volume2, VolumeOff } from "lucide-react"
 
 export default function HomePage() {
+  const [hasSpoken, setHasSpoken] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [audioEnabled, setAudioEnabled] = useState(true)
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null)
+
+  const speakMessage = (text: string) => {
+    if (!audioEnabled || typeof window === "undefined" || !("speechSynthesis" in window)) return
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel()
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = "es-ES"
+    utterance.rate = 0.9
+    utterance.pitch = 1.4 // Higher pitch for cute voice
+    utterance.volume = 1
+
+    // Try to find a female Spanish voice
+    const voices = window.speechSynthesis.getVoices()
+    const spanishFemaleVoice = voices.find(
+      (voice) => voice.lang.includes("es") && voice.name.toLowerCase().includes("female")
+    ) || voices.find(
+      (voice) => voice.lang.includes("es")
+    )
+    
+    if (spanishFemaleVoice) {
+      utterance.voice = spanishFemaleVoice
+    }
+
+    utterance.onstart = () => setIsSpeaking(true)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+
+    speechRef.current = utterance
+    window.speechSynthesis.speak(utterance)
+  }
+
+  // Load voices when available
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices()
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices()
+      }
+    }
+  }, [])
+
+  // Speak the greeting after component mounts with a delay
+  useEffect(() => {
+    if (hasSpoken || !audioEnabled) return
+
+    const timer = setTimeout(() => {
+      speakMessage("Hola cosita linda! Preparate porque tengo algo muy especial que mostrarte! Baja para descubrirlo...")
+      setHasSpoken(true)
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [hasSpoken, audioEnabled])
+
+  const toggleAudio = () => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+    }
+    setAudioEnabled(!audioEnabled)
+  }
+
+  const replayMessage = () => {
+    if (audioEnabled) {
+      speakMessage("Hola cosita linda! Preparate porque tengo algo muy especial que mostrarte! Baja para descubrirlo...")
+    }
+  }
   return (
     <main className="min-h-screen bg-background overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center px-4 py-20">
+        {/* Audio control button */}
+        <motion.button
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          onClick={toggleAudio}
+          className="fixed top-4 right-4 z-50 p-3 rounded-full bg-card border-2 border-primary/50 shadow-lg hover:scale-110 transition-transform"
+          title={audioEnabled ? "Silenciar a Hello Kitty" : "Activar voz de Hello Kitty"}
+        >
+          {audioEnabled ? (
+            <Volume2 className={`w-6 h-6 text-primary ${isSpeaking ? "animate-pulse" : ""}`} />
+          ) : (
+            <VolumeOff className="w-6 h-6 text-muted-foreground" />
+          )}
+        </motion.button>
         {/* Animated background gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/10" />
         
@@ -192,9 +281,25 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 1.5, type: "spring" }}
-            className="relative bg-card rounded-3xl p-6 shadow-xl border-2 border-primary/50 max-w-sm mb-8"
+            onClick={replayMessage}
+            className={`relative bg-card rounded-3xl p-6 shadow-xl border-2 max-w-sm mb-8 cursor-pointer hover:scale-105 transition-transform ${
+              isSpeaking ? "border-primary animate-pulse" : "border-primary/50"
+            }`}
+            title="Haz clic para escuchar de nuevo"
           >
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-10 border-r-10 border-b-10 border-l-transparent border-r-transparent border-b-primary/50" />
+            
+            {/* Speaking indicator */}
+            {isSpeaking && (
+              <motion.div 
+                className="absolute -top-2 -right-2 bg-primary rounded-full p-1"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              >
+                <Volume2 className="w-4 h-4 text-primary-foreground" />
+              </motion.div>
+            )}
+            
             <p className="text-foreground text-lg">
               Preparate porque tengo algo muy especial que mostrarte! Baja para descubrirlo...
             </p>
@@ -208,6 +313,9 @@ export default function HomePage() {
                 />
               ))}
             </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              Toca para escuchar de nuevo
+            </p>
           </motion.div>
 
           {/* Scroll indicator */}
