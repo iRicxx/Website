@@ -337,7 +337,7 @@ export function ProposalSection() {
                 
                 <div className="flex items-center gap-2 justify-center mb-4">
                   <HelloKittyFace size={36} expression="love" />
-                  <span className="text-base text-foreground/70">Hello Kitty pregunta:</span>
+                  <span className="text-base text-foreground/70">Ricardo el amor de tu vida pregunta:</span>
                 </div>
                 
                 <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-primary text-balance leading-tight">
