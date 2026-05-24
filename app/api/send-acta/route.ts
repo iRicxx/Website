@@ -19,7 +19,7 @@ export async function POST() {
     ]
 
     const { data, error } = await resend.emails.send({
-      from: 'Acta de Matrimonio <onboarding@resend.dev>',
+      from: 'Acta de Matrimonio <noreply@updates.codenix.cc>',
       to: recipients,
       subject: 'Acta de Matrimonio - Renovacion de Votos',
       html: `
